@@ -1,0 +1,227 @@
+#include <iostream>
+#include <string>
+#include <limits>
+using namespace std;
+
+#define MAX 10
+
+// =======================
+// Struktur Data Tiket
+// =======================
+struct Tiket {
+    int ticket_id;
+    string movie_name;
+    string cinema_name;
+    string show_time;
+    string seat_number;
+    int ticket_price;
+    string status;
+};
+
+// =======================
+// Circular Queue
+// =======================
+Tiket queue[MAX];
+int front = -1;
+int rear = -1;
+
+// Mengecek apakah antrean penuh
+bool isFull() {
+    return (front == (rear + 1) % MAX);
+}
+
+// Mengecek apakah antrean kosong
+bool isEmpty() {
+    return (front == -1);
+}
+
+// =======================
+// Enqueue Tiket
+// =======================
+void enqueueTiket(Tiket dataTiket) {
+    if (isFull()) {
+        cout << "Antrean tiket penuh!\n";
+        return;
+    }
+
+    if (isEmpty()) {
+        front = rear = 0;
+    } else {
+        rear = (rear + 1) % MAX;
+    }
+
+    queue[rear] = dataTiket;
+    cout << "Tiket berhasil ditambahkan ke antrean.\n";
+}
+
+// =======================
+// Dequeue Tiket
+// =======================
+void dequeueTiket() {
+    if (isEmpty()) {
+        cout << "Antrean kosong, tidak ada tiket untuk dilayani.\n";
+        return;
+    }
+
+    Tiket served = queue[front];
+    served.status = "Served";
+
+    cout << "\nTiket Dilayani:\n";
+    cout << "ID Tiket   : " << served.ticket_id << endl;
+    cout << "Film       : " << served.movie_name << endl;
+    cout << "Studio     : " << served.cinema_name << endl;
+    cout << "Harga      : Rp" << served.ticket_price << endl;
+    cout << "Status     : Served\n";
+
+    if (front == rear) {
+        front = rear = -1;
+    } else {
+        front = (front + 1) % MAX;
+    }
+}
+
+// =======================
+// Tampilkan Tiket Premium
+// =======================
+void tampilkanTiketPremium() {
+    if (isEmpty()) {
+        cout << "Tidak ada tiket dalam antrean.\n";
+        return;
+    }
+
+    int batasHarga = 100000;
+    int i = front;
+
+    cout << "\nDaftar Tiket Premium (> Rp100.000):\n";
+    while (true) {
+        if (queue[i].ticket_price > batasHarga) {
+            cout << "ID Tiket : " << queue[i].ticket_id
+                 << " | Film : " << queue[i].movie_name
+                 << " | Harga : Rp" << queue[i].ticket_price << endl;
+        }
+
+        if (i == rear) break;
+        i = (i + 1) % MAX;
+    }
+}
+
+// =======================
+// Hitung Tiket Menunggu
+// =======================
+int hitungTiketMenunggu() {
+    if (isEmpty()) return 0;
+
+    int count = 0;
+    int i = front;
+
+    while (true) {
+        if (queue[i].status == "Waiting") {
+            count++;
+        }
+
+        if (i == rear) break;
+        i = (i + 1) % MAX;
+    }
+
+    return count;
+}
+
+// =======================
+// Ubah Status Tiket
+// =======================
+bool ubahStatusTiket(int ticket_id, string statusBaru) {
+    if (isEmpty()) return false;
+
+    int i = front;
+    while (true) {
+        if (queue[i].ticket_id == ticket_id) {
+            queue[i].status = statusBaru;
+            return true;
+        }
+
+        if (i == rear) break;
+        i = (i + 1) % MAX;
+    }
+
+    return false;
+}
+
+// =======================
+// Program Utama
+// =======================
+int main() {
+    int pilihan;
+
+    do {
+        cout << "\n=== SISTEM ANTREAN TIKET BIOSKOP ===\n";
+        cout << "1. Enqueue Tiket\n";
+        cout << "2. Dequeue Tiket\n";
+        cout << "3. Tampilkan Tiket Premium\n";
+        cout << "4. Hitung Tiket Menunggu\n";
+        cout << "5. Ubah Status Tiket\n";
+        cout << "0. Keluar\n";
+        cout << "Pilih menu: ";
+        cin >> pilihan;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (pilihan == 1) {
+            Tiket t;
+            cout << "ID Tiket       : ";
+            cin >> t.ticket_id;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            cout << "Nama Film      : ";
+            getline(cin, t.movie_name);
+
+            cout << "Nama Bioskop   : ";
+            getline(cin, t.cinema_name);
+
+            cout << "Jam Tayang     : ";
+            getline(cin, t.show_time);
+
+            cout << "Nomor Kursi    : ";
+            getline(cin, t.seat_number);
+
+            cout << "Harga Tiket    : ";
+            cin >> t.ticket_price;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            t.status = "Waiting";
+            enqueueTiket(t);
+        }
+        else if (pilihan == 2) {
+            dequeueTiket();
+        }
+        else if (pilihan == 3) {
+            tampilkanTiketPremium();
+        }
+        else if (pilihan == 4) {
+            cout << "Jumlah tiket menunggu: "
+                 << hitungTiketMenunggu() << endl;
+        }
+        else if (pilihan == 5) {
+            int id;
+            string status;
+
+            cout << "Masukkan ID Tiket: ";
+            cin >> id;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            cout << "Status Baru (Waiting/Served): ";
+            cin >> status;
+
+            if (ubahStatusTiket(id, status)) {
+                cout << "Status tiket berhasil diubah.\n";
+            } else {
+                cout << "Tiket tidak ditemukan.\n";
+            }
+        }
+        else if (pilihan != 0) {
+            cout << "Pilihan tidak valid.\n";
+        }
+
+    } while (pilihan != 0);
+
+    cout << "Program selesai.\n";
+    return 0;
+}
